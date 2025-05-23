@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sistema de Salud - Portal Completo</title>
+  <style>
+    /* RESET Y ESTILOS BASE */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8fafc;
+      color: #333;
+    }
+    header {
+      background-color: #1a73e8;
+      color: white;
+      padding: 15px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      user-select: none;
+    }
+    nav {
+      background: #155ab6;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 10px 0;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+    }
+    nav button:hover, nav button.active {
+      background-color: #0d3c7f;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      min-height: 500px;
+    }
+
+    section {
+      display: none;
+    }
+    section.active {
+      display: block;
+    }
+
+    /* CHATBOT */
+    #chat {
+      border: 1px solid #ccc;
+      background: #fafafa;
+      height: 350px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    }
+    #chat p {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .user {
+      text-align: right;
+      color: #1a73e8;
+      font-weight: bold;
+    }
+    .bot {
+      text-align: left;
+      color: #333;
+    }
+    #inputMsg {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    #btnSend {
+      width: 18%;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      background-color: #1a73e8;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 2%;
+    }
+    #btnSend:hover {
+      background-color: #155ab6;
+    }
+
+    /* TABLAS E INVENTARIO */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f6fc;
+    }
+    /* BOTONES */
+    .btn {
+      background-color: #1a73e8;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background-color: #155ab6;
+    }
+    input, select {
+      padding: 6px 8px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    Portal de Salud Moderno
+  </header>
+
+  <nav>
+    <button class="tabBtn active" data-target="citas">Agendar Citas</button>
+    <button class="tabBtn" data-target="historia">Historia Clínica</button>
+    <button class="tabBtn" data-target="inventario">Inventario</button>
+    <button class="tabBtn" data-target="reportes">Reportes</button>
+  </nav>
+
+  <main>
+    <!-- Módulo Citas y Chatbot -->
+    <section id="citas" class="active">
+      <h2>Agendar Citas Médicas</h2>
+      <div id="chat"></div>
+      <input type="text" id="inputMsg" placeholder="Escribe aquí..." autocomplete="off" />
+      <button id="btnSend">Enviar</button>
+    </section>
+
+    <!-- Módulo Historia Clínica -->
+    <section id="historia">
+      <h2>Historia Clínica</h2>
+      <p>Aquí puedes registrar y consultar la historia clínica de los pacientes.</p>
+      <form id="formHistoria">
+        <label for="pacienteHistoria">Paciente:</label>
+        <select id="pacienteHistoria"></select>
+
+        <label for="diagnostico">Diagnóstico:</label>
+        <textarea id="diagnostico" rows="4" style="width:100%; border-radius:6px; border:1px solid #ccc;"></textarea>
+
+        <button type="button" class="btn" id="btnGuardarHistoria">Guardar Historia</button>
+      </form>
+      <hr />
+      <div id="listaHistorias"></div>
+    </section>
+
+    <!-- Módulo Inventario -->
+    <section id="inventario">
+      <h2>Inventario de Medicamentos</h2>
+      <form id="formInventario">
+        <label for="nombreMed">Nombre del medicamento:</label>
+        <input type="text" id="nombreMed" required />
+
+        <label for="cantidadMed">Cantidad:</label>
+        <input type="number" id="cantidadMed" min="1" required />
+
+        <button type="button" class="btn" id="btnAgregarMed">Agregar Medicamento</button>
+      </form>
+
+      <table id="tablaInventario">
+        <thead>
+          <tr><th>Medicamento</th><th>Cantidad</th><th>Acción</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Módulo Reportes -->
+    <section id="reportes">
+      <h2>Reportes</h2>
+      <p>Genera reportes básicos de citas y stock de medicamentos.</p>
+      <button class="btn" id="btnReporteCitas">Ver citas agendadas</button>
+      <button class="btn" id="btnReporteInventario">Ver inventario</button>
+      <div id="reportContent" style="margin-top:15px;"></div>
+    </section>
+  </main>
+
+  <script>
+    // ---- Navegación entre módulos ----
+    const tabs = document.querySelectorAll('.tabBtn');
+    const sections = document.querySelectorAll('main section');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.getAttribute('data-target');
+        sections.forEach(sec => {
+          sec.classList.toggle('active', sec.id === target);
+        });
+      });
+    });
+
+    // ----- Datos simulados -----
+    const users = [
+      { id: 1, name: 'Dr. García', role: 'medico' },
+      { id: 2, name: 'Dra. López', role: 'medico' },
+      { id: 3, name: 'Paciente Demo', role: 'paciente' }
+    ];
+
+    let loggedUser = users[2]; // Usuario simulado
+
+    // Datos y almacenamiento
+    let appointments = [];
+    let historiasClinicas = [];
+    let inventario = [];
+
+    // ---------------- CHATBOT ----------------
+    const chat = document.getElementById('chat');
+    const inputMsg = document.getElementById('inputMsg');
+    const btnSend = document.getElementById('btnSend');
+
+    let estadoChatbot = 'inicio';
+    let tempDatos = {};
+
+    function addChatMessage(msg, fromUser = true) {
+      const p = document.createElement('p');
+      p.textContent = msg;
+      p.className = fromUser ? 'user' : 'bot';
+      chat.appendChild(p);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function getUserNameById(id) {
+      const u = users.find(u => u.id === id);
+      return u ? u.name : 'Desconocido';
+    }
+
+    function guardarCitas() {
+      // Aquí puedes implementar localStorage si deseas persistencia
+    }
+
+    function renderizarCitas() {
+      // Podemos implementar listado futuro si quieres
+    }
+
+    function procesarChatbot(msg) {
+      msg = msg.trim().toLowerCase();
+      if(estadoChatbot === 'inicio') {
+        if(msg.includes('agendar cita')) {
+          estadoChatbot = 'solicitando_nombre';
+          addChatMessage('Por favor, indica el nombre completo del paciente:', false);
+        } else {
+          addChatMessage('Hola, para agendar una cita escribe: "agendar cita"', false);
+        }
+      }
+      else if(estadoChatbot === 'solicitando_nombre') {
+        tempDatos.nombrePaciente = msg;
+        estadoChatbot = 'solicitando_fecha';
+        addChatMessage('¿Para qué fecha deseas la cita? (Formato: DD/MM/AAAA)', false);
+      }
+      else if(estadoChatbot === 'solicitando_fecha') {
+        // Validación básica de fecha
+        const fecha = msg.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if(fecha) {
+          tempDatos.fecha = msg;
+          estadoChatbot = 'solicitando_hora';
+          addChatMessage('¿A qué hora? (Formato 24h: HH:MM)', false);
+        } else {
+          addChatMessage('Por favor, ingresa la fecha en formato DD/MM/AAAA', false);
+        }
+      }
+      else if(estadoChatbot === 'solicitando_hora') {
+        // Validar hora hh:mm
+        const hora = msg.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+        if(hora) {
+          tempDatos.hora = msg;
+          estadoChatbot = 'confirmacion';
+          addChatMessage(`Confirma que deseas agendar la cita para ${tempDatos.nombrePaciente} el ${tempDatos.fecha} a las ${tempDatos.hora} (sí/no)`, false);
+        } else {
+          addChatMessage('Por favor, ingresa la hora en formato 24h HH:MM', false);
+        }
+      }
+      else if(estadoChatbot === 'confirmacion') {
+        if(msg === 'sí' || msg === 'si') {
+          // Guardar cita
+          appointments.push({
+            paciente: tempDatos.nombrePaciente,
+            fecha: tempDatos.fecha,
+            hora: tempDatos.hora,
+            doctor: users.find(u => u.role === 'medico').name
+          });
+          addChatMessage('Cita agendada con éxito.', false);
+          tempDatos = {};
+          estadoChatbot = 'inicio';
+        } else if(msg === 'no') {
+          addChatMessage('Cita cancelada. Para iniciar de nuevo escribe: "agendar cita"', false);
+          tempDatos = {};
+          estadoChatbot = 'inicio';
+        } else {
+          addChatMessage('Por favor responde "sí" o "no".', false);
+        }
+      }
+    }
+
+    btnSend.addEventListener('click', () => {
+      const texto = inputMsg.value;
+      if(texto.trim() === '') return;
+      addChatMessage(texto, true);
+      procesarChatbot(texto);
+      inputMsg.value = '';
+      inputMsg.focus();
+    });
+
+    inputMsg.addEventListener('keypress', e => {
+      if(e.key === 'Enter') {
+        btnSend.click();
+      }
+    });
+
+    // ---------------- HISTORIA CLINICA ----------------
+    const pacienteHistoria = document.getElementById('pacienteHistoria');
+    const btnGuardarHistoria = document.getElementById('btnGuardarHistoria');
+    const listaHistorias = document.getElementById('listaHistorias');
+    const diagnosticoInput = document.getElementById('diagnostico');
+
+    function cargarPacientesEnHistoria() {
+      pacienteHistoria.innerHTML = '';
+      users.filter(u => u.role === 'paciente').forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.name;
+        option.textContent = p.name;
+        pacienteHistoria.appendChild(option);
+      });
+    }
+    cargarPacientesEnHistoria();
+
+    btnGuardarHistoria.addEventListener('click', () => {
+      const paciente = pacienteHistoria.value;
+      const diag = diagnosticoInput.value.trim();
+      if(!paciente || !diag) {
+        alert('Por favor, complete todos los campos.');
+        return;
+      }
+      historiasClinicas.push({ paciente, diagnostico: diag, fecha: new Date().toLocaleDateString() });
+      diagnosticoInput.value = '';
+      alert('Historia clínica guardada.');
+      mostrarHistorias();
+    });
+
+    function mostrarHistorias() {
+      if(historiasClinicas.length === 0) {
+        listaHistorias.innerHTML = '<p>No hay historias clínicas registradas.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Paciente</th><th>Diagnóstico</th><th>Fecha</th></tr></thead><tbody>';
+      historiasClinicas.forEach(h => {
+        html += `<tr><td>${h.paciente}</td><td>${h.diagnostico}</td><td>${h.fecha}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      listaHistorias.innerHTML = html;
+    }
+    mostrarHistorias();
+
+    // ---------------- INVENTARIO ----------------
+    const formInventario = document.getElementById('formInventario');
+    const nombreMed = document.getElementById('nombreMed');
+    const cantidadMed = document.getElementById('cantidadMed');
+    const btnAgregarMed = document.getElementById('btnAgregarMed');
+    const tablaInventario = document.querySelector('#tablaInventario tbody');
+
+    btnAgregarMed.addEventListener('click', () => {
+      const nombre = nombreMed.value.trim();
+      const cantidad = parseInt(cantidadMed.value, 10);
+      if(!nombre || isNaN(cantidad) || cantidad < 1) {
+        alert('Por favor, ingresa un nombre y cantidad válida.');
+        return;
+      }
+      const existente = inventario.find(m => m.nombre.toLowerCase() === nombre.toLowerCase());
+      if(existente) {
+        existente.cantidad += cantidad;
+      } else {
+        inventario.push({ nombre, cantidad });
+      }
+      nombreMed.value = '';
+      cantidadMed.value = '';
+      mostrarInventario();
+    });
+
+    function mostrarInventario() {
+      if(inventario.length === 0) {
+        tablaInventario.innerHTML = '<tr><td colspan="3">No hay medicamentos en inventario.</td></tr>';
+        return;
+      }
+      tablaInventario.innerHTML = '';
+      inventario.forEach((med, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${med.nombre}</td><td>${med.cantidad}</td>
+          <td><button class="btn" onclick="eliminarMed(${i})">Eliminar</button></td>`;
+        tablaInventario.appendChild(tr);
+      });
+    }
+    mostrarInventario();
+
+    window.eliminarMed = function(index) {
+      if(confirm('¿Eliminar este medicamento?')) {
+        inventario.splice(index, 1);
+        mostrarInventario();
+      }
+    }
+
+    // ---------------- REPORTES ----------------
+    const btnReporteCitas = document.getElementById('btnReporteCitas');
+    const btnReporteInventario = document.getElementById('btnReporteInventario');
+    const reportContent = document.getElementById('reportContent');
+
+    btnReporteCitas.addEventListener('click', () => {
+      if(appointments.length === 0) {
+        reportContent.innerHTML = '<p>No hay citas agendadas.</p>';
+        return;
+      }
+      let html = '<h3>Citas Agendadas</h3><table><thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Médico</th></tr></thead><tbody>';
+      appointments.forEach(c => {
+        html += `<tr><td>${c.paciente}</td><td>${c.fecha}</td><td>${c.hora}</td><td>${c.doctor}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      reportContent.innerHTML = html;
+    });
+
+    btnReporteInventario.addEventListener('click', () => {
+      if(inventario.length === 0) {
+        reportContent.innerHTML = '<p>No hay medicamentos en inventario.</p>';
+        return;
+      }
+      let html = '<h3>Inventario de Medicamentos</h3><table><thead><tr><th>Medicamento</th><th>Cantidad</th></tr></thead><tbody>';
+      inventario.forEach(m => {
+        html += `<tr><td>${m.nombre}</td><td>${m.cantidad}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      reportContent.innerHTML = html;
+    });
+  </script>
+</body>
+</html>
+
+
+
+
